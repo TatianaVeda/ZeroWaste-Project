@@ -1,0 +1,206 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZeroWaste Project</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Welcome to ZeroWaste Project</h1>
+        <p>Ensuring Sustainability and Efficiency in Food Production</p>
+    </header>
+
+    <section class="intro">
+        <h2>Production Process Monitoring</h2>
+        <p>This is a simple application for monitoring and improving weight management in food production. Ensure quality control at every stage!</p>
+    </section>
+
+    <section class="data">
+        <h3>Real-Time Weight Measurements</h3>
+        <div class="weight-container">
+            <div class="weight-stage">
+                <h4>Raw Material</h4>
+                <p id="raw_material">-- kg</p>
+            </div>
+            <div class="weight-stage">
+                <h4>Stage 1</h4>
+                <p id="stage_1">-- kg</p>
+            </div>
+            <div class="weight-stage">
+                <h4>Stage 2</h4>
+                <p id="stage_2">-- kg</p>
+            </div>
+            <div class="weight-stage">
+                <h4>Final Product</h4>
+                <p id="final_product">-- kg</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="update">
+        <h3>Update Weight</h3>
+        <form id="update-weight-form">
+            <label for="stage">Select Stage:</label>
+            <select id="stage" name="stage">
+                <option value="raw_material">Raw Material</option>
+                <option value="stage_1">Stage 1</option>
+                <option value="stage_2">Stage 2</option>
+                <option value="final_product">Final Product</option>
+            </select>
+            <label for="new_weight">New Weight:</label>
+            <input type="number" id="new_weight" name="new_weight" required>
+            <button type="submit">Update Weight</button>
+        </form>
+    </section>
+
+    <section class="alerts">
+        <h3>Alerts</h3>
+        <div id="alerts-container">
+            <p>No alerts currently.</p>
+        </div>
+    </section>
+
+    <footer>
+        <p>Powered by ZeroWaste Project</p>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.min.js"></script>
+    <script>
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+        // Listen for updates
+        socket.on('weights_update', function(data) {
+            document.getElementById('raw_material').textContent = data.raw_material + ' kg';
+            document.getElementById('stage_1').textContent = data.stage_1 + ' kg';
+            document.getElementById('stage_2').textContent = data.stage_2 + ' kg';
+            document.getElementById('final_product').textContent = data.final_product + ' kg';
+        });
+
+        // Form submission for updating weight
+        document.getElementById('update-weight-form').onsubmit = function(event) {
+            event.preventDefault();
+            var stage = document.getElementById('stage').value;
+            var newWeight = document.getElementById('new_weight').value;
+
+            fetch('/update_weight', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    stage: stage,
+                    new_weight: newWeight
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+            });
+        }
+    </script>
+</body>
+</html>
+
+
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZeroWaste Factory - Weight Monitoring</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            margin: 20px;
+        }
+        .card {
+            padding: 20px;
+            border: 1px solid #ccc;
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+        .card h3 {
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ZeroWaste Factory - Weight Monitoring</h1>
+
+        <div class="card">
+            <h3>Current Weights:</h3>
+            <div id="weights">
+                <p>Loading...</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>Prediction (Stage 1 Weight):</h3>
+            <div id="prediction">
+                <p>Loading...</p>
+            </div>
+        </div>
+
+        <button onclick="updateWeight()">Update Weight for Stage 1</button>
+    </div>
+
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <script>
+        const socket = io();
+
+        // Listen for weight updates
+        socket.on('weights_update', function(data) {
+            document.getElementById('weights').innerHTML = `
+                Raw Material: ${data.raw_material} kg<br>
+                Stage 1: ${data.stage_1} kg<br>
+                Stage 2: ${data.stage_2} kg<br>
+                Final Product: ${data.final_product} kg
+            `;
+        });
+
+        // Fetch prediction
+        async function fetchPrediction() {
+            const response = await fetch('/predict_weight');
+            const data = await response.json();
+            document.getElementById('prediction').innerHTML = `Predicted Weight: ${data.predicted_weight} kg`;
+        }
+
+        // Fetch the weights when the page loads
+        async function fetchWeights() {
+            const response = await fetch('/get_weights');
+            const data = await response.json();
+            document.getElementById('weights').innerHTML = `
+                Raw Material: ${data.raw_material} kg<br>
+                Stage 1: ${data.stage_1} kg<br>
+                Stage 2: ${data.stage_2} kg<br>
+                Final Product: ${data.final_product} kg
+            `;
+        }
+
+        fetchWeights();
+        fetchPrediction();
+
+        // Update weight for Stage 1 (simulated for demo)
+        function updateWeight() {
+            fetch('/update_weight', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    stage: 'stage_1',
+                    new_weight: Math.random() * 500 + 100  // Random weight update
+                })
+            }).then(response => response.json())
+              .then(data => console.log(data));
+        }
+    </script>
+</body>
+</html> -->

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZeroWaste Production Monitoring</title>
+    <link rel="stylesheet" href="static/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- main title -->
+        <h1>ZeroWaste Production Monitoring</h1>
+        
+        <!-- current data block-->
+        <div class="card">
+            <div class="status">
+                <p><strong>Current Weight:</strong> 1000kg</p>
+                <p><strong>Stage 1:</strong> 500kg</p>
+                <p><strong>Stage 2:</strong> 200kg</p>
+                <p><strong>Final Product:</strong> 100kg</p>
+            </div>
+            <button id="check-weight">Check Weight</button>
+        </div>
+
+        <!-- alerts block -->
+        <div class="card alert-card">
+            <div class="alert">
+                <p><strong>Attention!</strong> Weight deviation detected!</p>
+            </div>
+            <button id="confirm-fix">Confirm Fix</button>
+        </div>
+
+        <!-- history data button-->
+        <button id="history-btn">View History</button>
+    </div>
+
+    <script src="/static/socket.io.js"></script>
+    <script>
+        //inintialozation Socket.IO
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+        socket.on('connect', function() {
+            console.log("Client connected!");
+        });
+
+        // listen to the weight update from the server
+        socket.on('weights_update', function(data) {
+            document.querySelector('.status').innerHTML = `
+                <p><strong>Current Weight:</strong> ${data.raw_material}kg</p>
+                <p><strong>Stage 1:</strong> ${data.stage_1}kg</p>
+                <p><strong>Stage 2:</strong> ${data.stage_2}kg</p>
+                <p><strong>Final Product:</strong> ${data.final_product}kg</p>
+            `;
+        });
+
+        // actual data button
+        document.getElementById('check-weight').addEventListener('click', function() {
+            socket.emit('get_weights');
+        });
+
+        // errors fixed button
+        document.getElementById('confirm-fix').addEventListener('click', function() {
+            alert("Fix confirmed");
+        });
+        
+        // history button
+        document.getElementById('history-btn').addEventListener('click', function() {
+            alert("Viewing history...");
+        });
+    </script>
+</body>
+</html>
